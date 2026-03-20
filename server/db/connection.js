@@ -63,7 +63,6 @@ async function initDb() {
       serverSelectionTimeoutMS: 5000,
       tls: true,
       tlsAllowInvalidCertificates: false,
-      tlsInsecure: false,
       retryWrites: true,
     });
 
