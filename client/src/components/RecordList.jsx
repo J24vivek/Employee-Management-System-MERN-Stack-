@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PropTypes from 'prop-types';
 
+
 const Record = (props) => (
   <tr className="table-row">
     <td className="table-cell table-cell-name">
