@@ -12,10 +12,10 @@ const Record = (props) => (
           alt="Avatar"
           style={{ width: '32px', height: '32px' }}
         />
-        <span style={{ fontWeight: 600 }}>{props.record.name}</span>
+        <span style={{ fontWeight: 600 }}>{props.record.name.charAt(0).toUpperCase() + props.record.name.slice(1)}</span>
       </div>
     </td>
-    <td className="table-cell table-cell-position">{props.record.position}</td>
+    <td className="table-cell table-cell-position">{props.record.position.charAt(0).toUpperCase() + props.record.position.slice(1)}</td>
     <td className="table-cell table-cell-level">
       <span className={`badge badge-${props.record.level.toLowerCase()}`}>
         {props.record.level}
