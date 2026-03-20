@@ -61,6 +61,10 @@ async function initDb() {
         deprecationErrors: true,
       },
       serverSelectionTimeoutMS: 5000,
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      tlsInsecure: false,
+      retryWrites: true,
     });
 
     await client.connect();
