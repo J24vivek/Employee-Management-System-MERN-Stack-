@@ -65,13 +65,16 @@ export default function RecordList() {
   useEffect(() => {
     async function getRecords() {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/record/`);
+        const apiUrl = `${import.meta.env.VITE_API_URL}/record/`;
+        console.log("Fetching from:", apiUrl);
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           const message = `An error occurred: ${response.statusText}`;
           console.error(message);
           return;
         }
         const records = await response.json();
+        console.log("Records fetched successfully:", records);
         setRecords(records);
       } catch (error) {
         console.error("Error fetching records:", error);
