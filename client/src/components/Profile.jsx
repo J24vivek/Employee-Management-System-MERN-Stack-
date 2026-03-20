@@ -14,7 +14,7 @@ export default function Profile() {
 
   useEffect(() => {
     async function fetchRecord() {
-      const response = await fetch('http://localhost:5050/record/' + params.id);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/record/${params.id}`);
       if (!response.ok) {
         console.error(`Error: ${response.statusText}`);
         navigate("/");
