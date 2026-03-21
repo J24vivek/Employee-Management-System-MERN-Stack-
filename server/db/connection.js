@@ -1,58 +1,17 @@
 import "dotenv/config";
-import { MongoClient, ServerApiVersion, ObjectId } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
 const uri = process.env.ATLAS_URI;
-let realDb = null;
-let mockRecords = [];
 
-// Mock collection for in-memory storage (when MongoDB unavailable)
-const mockCollection = {
-  find: (query = {}) => {
-    return {
-      toArray: async () => {
-        if (query._id) {
-          const id = query._id.toString?.() || query._id;
-          return mockRecords.filter(r => r._id.toString() === id);
-        }
-        return mockRecords;
-      },
-    };
-  },
-  findOne: async (query) => {
-    const id = query._id.toString?.() || query._id;
-    return mockRecords.find(r => r._id.toString() === id) || null;
-  },
-  insertOne: async (doc) => {
-    const newDoc = { ...doc, _id: new ObjectId() };
-    mockRecords.push(newDoc);
-    return { insertedId: newDoc._id };
-  },
-  updateOne: async (query, update) => {
-    const id = query._id.toString?.() || query._id;
-    const idx = mockRecords.findIndex(r => r._id.toString() === id);
-    if (idx === -1) return { matchedCount: 0, modifiedCount: 0 };
-    mockRecords[idx] = { ...mockRecords[idx], ...update.$set };
-    return { matchedCount: 1, modifiedCount: 1 };
-  },
-  deleteOne: async (query) => {
-    const id = query._id.toString?.() || query._id;
-    const idx = mockRecords.findIndex(r => r._id.toString() === id);
-    if (idx === -1) return { deletedCount: 0 };
-    mockRecords.splice(idx, 1);
-    return { deletedCount: 1 };
-  },
-};
+if (!uri) {
+  console.error("❌ ATLAS_URI environment variable is not set!");
+  console.error("Please create a .env file in the server directory with your MongoDB Atlas connection string.");
+  process.exit(1);
+}
 
-let defaultExport;
+let dbConnection;
 
-async function initDb() {
-  if (!uri) {
-    console.warn("⚠️  Using in-memory mock database (ATLAS_URI not set)");
-    return {
-      collection: async () => mockCollection,
-    };
-  }
-
+async function connectToDatabase() {
   try {
     const client = new MongoClient(uri, {
       serverApi: {
@@ -60,27 +19,31 @@ async function initDb() {
         strict: true,
         deprecationErrors: true,
       },
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000, // Increased timeout
       tls: true,
       tlsAllowInvalidCertificates: false,
       retryWrites: true,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     });
 
     await client.connect();
     await client.db("admin").command({ ping: 1 });
-    console.log("✓ Connected to MongoDB Atlas");
-    realDb = client.db("employees");
-    return {
-      collection: async (name) => realDb.collection(name),
-    };
+    console.log("✓ Successfully connected to MongoDB Atlas");
+
+    dbConnection = client.db("employees");
+    return dbConnection;
   } catch (err) {
-    console.warn(`⚠️  MongoDB connection failed: ${err.message}. Using in-memory mock database.`);
-    return {
-      collection: async () => mockCollection,
-    };
+    console.error(`❌ MongoDB connection failed: ${err.message}`);
+    console.error("Please check your ATLAS_URI environment variable and MongoDB Atlas network access settings.");
+    console.error("The application cannot function without a proper database connection.");
+    process.exit(1);
   }
 }
 
-defaultExport = await initDb();
+const db = await connectToDatabase();
 
-export default defaultExport;
+export default {
+  collection: async (name) => db.collection(name),
+};
