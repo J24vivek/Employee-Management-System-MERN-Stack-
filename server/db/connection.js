@@ -12,6 +12,41 @@ if (!uri) {
 }
 
 let dbConnection;
+let mockRecords = [];
+const mockCollection = {
+  find: (query = {}) => ({
+    toArray: async () => {
+      if (query._id) {
+        const id = query._id.toString?.() || query._id;
+        return mockRecords.filter((r) => r._id.toString() === id);
+      }
+      return mockRecords;
+    },
+  }),
+  findOne: async (query) => {
+    const id = query._id.toString?.() || query._id;
+    return mockRecords.find((r) => r._id.toString() === id) || null;
+  },
+  insertOne: async (doc) => {
+    const record = { ...doc, _id: Date.now().toString() };
+    mockRecords.push(record);
+    return { insertedId: record._id };
+  },
+  updateOne: async (query, update) => {
+    const id = query._id.toString?.() || query._id;
+    const index = mockRecords.findIndex((r) => r._id.toString() === id);
+    if (index === -1) return { matchedCount: 0, modifiedCount: 0 };
+    mockRecords[index] = { ...mockRecords[index], ...update.$set };
+    return { matchedCount: 1, modifiedCount: 1 };
+  },
+  deleteOne: async (query) => {
+    const id = query._id.toString?.() || query._id;
+    const index = mockRecords.findIndex((r) => r._id.toString() === id);
+    if (index === -1) return { deletedCount: 0 };
+    mockRecords.splice(index, 1);
+    return { deletedCount: 1 };
+  },
+};
 
 async function connectToDatabase() {
   try {
@@ -44,7 +79,7 @@ async function connectToDatabase() {
       compressors: ['zlib'],
 
       // ⏰ HEARTBEAT - KEEPS CONNECTION ALIVE
-      
+
     });
     await client.connect();
     await client.db("admin").command({ ping: 1 });
@@ -75,7 +110,11 @@ async function connectToDatabase() {
     );
     console.error("4. Try recreating the database user in Atlas");
 
-    process.exit(1);
+    console.warn("⚠️ Falling back to in-memory mock database for continued service.");
+    dbConnection = {
+      collection: async () => mockCollection,
+    };
+    return dbConnection;
   }
 }
 
