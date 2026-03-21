@@ -19,13 +19,30 @@ async function connectToDatabase() {
         strict: true,
         deprecationErrors: true,
       },
-      serverSelectionTimeoutMS: 10000, // Increased timeout
+      // Connection timeout settings
+      serverSelectionTimeoutMS: 30000, // 30 seconds
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+
+      // SSL/TLS settings - more permissive for cloud deployments
       tls: true,
-      tlsAllowInvalidCertificates: false,
+      tlsAllowInvalidCertificates: true, // Allow self-signed certificates
+      tlsAllowInvalidHostnames: true, // Allow hostname mismatches
+
+      // Connection pool settings
+      maxPoolSize: 10,
+      minPoolSize: 5,
+
+      // Retry and write concern
       retryWrites: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      retryReads: true,
+
+      // Compression
+      compressors: ['zlib'],
+
+      // Additional options for cloud environments
+      maxIdleTimeMS: 30000,
+      bufferMaxEntries: 0,
     });
 
     await client.connect();
@@ -36,8 +53,23 @@ async function connectToDatabase() {
     return dbConnection;
   } catch (err) {
     console.error(`❌ MongoDB connection failed: ${err.message}`);
-    console.error("Please check your ATLAS_URI environment variable and MongoDB Atlas network access settings.");
-    console.error("The application cannot function without a proper database connection.");
+    console.error(`Error code: ${err.code || 'Unknown'}`);
+    console.error(`Error name: ${err.name || 'Unknown'}`);
+
+    if (err.message.includes('SSL') || err.message.includes('TLS')) {
+      console.error('\n🔧 SSL/TLS Connection Issues Detected:');
+      console.error('• Try updating your MongoDB Atlas connection string');
+      console.error('• Check MongoDB Atlas network access settings');
+      console.error('• Ensure your database user has proper permissions');
+      console.error('• Try using a different MongoDB Atlas cluster region closer to Render');
+    }
+
+    console.error('\n📋 Troubleshooting steps:');
+    console.error('1. Verify ATLAS_URI environment variable in Render');
+    console.error('2. Check MongoDB Atlas dashboard for cluster status');
+    console.error('3. Ensure IP whitelist allows 0.0.0.0/0 or Render\'s IP ranges');
+    console.error('4. Try recreating the database user in Atlas');
+
     process.exit(1);
   }
 }
