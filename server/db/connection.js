@@ -37,14 +37,14 @@ async function connectToDatabase() {
 
       // 🔄 AUTO RECOVERY SETTINGS
       retryWrites: true,
-      retryReads: true, // Automatically retry failed reads
-      bufferMaxEntries: 0, // Don't buffer operations when disconnected
+      retryReads: true,
+      bufferMaxEntries: 0, 
 
       // 📦 COMPRESSION - REDUCES BANDWIDTH
       compressors: ['zlib'],
 
       // ⏰ HEARTBEAT - KEEPS CONNECTION ALIVE
-      // heartbeatFrequencyMS: 10000,  // Check connection every 10 seconds - removed as it may cause issues
+      
     });
     await client.connect();
     await client.db("admin").command({ ping: 1 });
