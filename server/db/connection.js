@@ -19,30 +19,32 @@ async function connectToDatabase() {
         strict: true,
         deprecationErrors: true,
       },
-      // Connection timeout settings
-      serverSelectionTimeoutMS: 30000, // 30 seconds
-      connectTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
+      // 🚀 PRODUCTION CONNECTION SETTINGS FOR 24/7 UPTIME
+      serverSelectionTimeoutMS: 30000, // How long to wait for server selection (30s)
+      connectTimeoutMS: 30000,         // Initial connection timeout (30s)
+      socketTimeoutMS: 60000,          // Socket operation timeout (60s)
 
-      // SSL/TLS settings - more permissive for cloud deployments
+      // 🔒 SSL/TLS settings for cloud deployments
       tls: true,
-      tlsAllowInvalidCertificates: true, // Allow self-signed certificates
-      tlsAllowInvalidHostnames: true, // Allow hostname mismatches
+      tlsAllowInvalidCertificates: true,
+      tlsAllowInvalidHostnames: true,
 
-      // Connection pool settings
-      maxPoolSize: 10,
-      minPoolSize: 5,
+      // 🏊 CONNECTION POOL - MAINTAINS PERSISTENT CONNECTIONS
+      maxPoolSize: 20,        // Maximum connections in pool (increased for production)
+      minPoolSize: 10,        // Minimum connections to maintain (prevents cold starts)
+      maxIdleTimeMS: 60000,   // Keep connections alive for 60 seconds when idle
 
-      // Retry and write concern
-      retryWrites: true,
-      retryReads: true,
+      // 🔄 AUTO RECOVERY SETTINGS
+      retryWrites: true,      // Automatically retry failed writes
+      retryReads: true,       // Automatically retry failed reads
+      bufferMaxEntries: 0,    // Don't buffer operations when disconnected
 
-      // Compression
+      // 📦 COMPRESSION - REDUCES BANDWIDTH
       compressors: ['zlib'],
 
-      // Additional options for cloud environments
-      maxIdleTimeMS: 30000,
-      bufferMaxEntries: 0,
+      // ⏰ HEARTBEAT - KEEPS CONNECTION ALIVE
+      heartbeatFrequencyMS: 10000,  // Check connection every 10 seconds
+    });
     });
 
     await client.connect();
