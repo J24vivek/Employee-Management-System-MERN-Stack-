@@ -14,22 +14,28 @@ export default function Profile() {
 
   useEffect(() => {
     async function fetchRecord() {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/record/${params.id}`);
-      if (!response.ok) {
-        console.error(`Error: ${response.statusText}`);
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+        const response = await fetch(`${baseUrl}/record/${params.id}`);
+        if (!response.ok) {
+          console.error(`Error: ${response.statusText}`);
+          navigate("/");
+          return;
+        }
+        const data = await response.json();
+        setRecord(data);
+        
+        // Generate random but realistic data for the profile
+        setStats({
+          workingDays: Math.floor(Math.random() * (310 - 200) + 200), // Random days between 200-310
+          performance: Math.floor(Math.random() * (98 - 85) + 85), // Random % between 85-98
+          projects: Math.floor(Math.random() * (12 - 3) + 3),
+          leaveBalance: Math.floor(Math.random() * (24 - 5) + 5)
+        });
+      } catch (error) {
+        console.error("Error fetching record:", error);
         navigate("/");
-        return;
       }
-      const data = await response.json();
-      setRecord(data);
-      
-      // Generate random but realistic data for the profile
-      setStats({
-        workingDays: Math.floor(Math.random() * (310 - 200) + 200), // Random days between 200-310
-        performance: Math.floor(Math.random() * (98 - 85) + 85), // Random % between 85-98
-        projects: Math.floor(Math.random() * (12 - 3) + 3),
-        leaveBalance: Math.floor(Math.random() * (24 - 5) + 5)
-      });
     }
     fetchRecord();
   }, [params.id, navigate]);
@@ -56,18 +62,18 @@ export default function Profile() {
         <div className="profile-card profile-main">
           <div className="profile-avatar-container">
             <img 
-              src={`https://ui-avatars.com/api/?name=${record.name}&background=random&color=fff&rounded=true&size=200`} 
-              alt={record.name}
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(record.name || "User")}&background=random&color=fff&rounded=true&size=200`} 
+              alt={record.name || "User"}
               className="profile-avatar-large"
             />
           </div>
-          <h2 className="profile-name-large">{record.name}</h2>
-          <p className="profile-position-badge">{record.position}</p>
+          <h2 className="profile-name-large">{record.name || "Unknown"}</h2>
+          <p className="profile-position-badge">{record.position || "No Position"}</p>
           
           <div className="profile-meta">
             <div className="meta-item">
               <span className="meta-label">Experience</span>
-              <span className={`badge badge-${record.level.toLowerCase()}`}>{record.level} Level</span>
+              <span className={`badge badge-${(record.level || "").toLowerCase()}`}>{record.level || "Unknown"} Level</span>
             </div>
           </div>
 

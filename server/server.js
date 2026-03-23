@@ -9,6 +9,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://ems-8y1s.onrender.com"
 ];
 

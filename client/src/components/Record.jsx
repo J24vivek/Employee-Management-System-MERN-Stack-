@@ -5,7 +5,7 @@ export default function Record() {
   const [form, setForm] = useState({
     name: "",
     position: "",
-    level: "",
+    level: "Intern",
   });
   const [isNew, setIsNew] = useState(true);
   const params = useParams();
@@ -13,27 +13,40 @@ export default function Record() {
 
   useEffect(() => {
     async function fetchData() {
-      const id = params.id?.toString() || undefined;
-      if (!id) return;
-      setIsNew(false);
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/record/${params.id.toString()}`
-      );
-      if (!response.ok) {
-        const message = `An error has occurred: ${response.statusText}`;
-        console.error(message);
-        return;
-      }
-      const record = await response.json();
-      if (!record) {
-        console.warn(`Record with id ${id} not found`);
+      try {
+        const id = params.id?.toString() || undefined;
+        if (!id) {
+          setIsNew(true);
+          setForm({ name: "", position: "", level: "Intern" });
+          return;
+        }
+        setIsNew(false);
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+        const response = await fetch(
+          `${baseUrl}/record/${id}`
+        );
+        if (!response.ok) {
+          const message = `An error has occurred: ${response.statusText}`;
+          console.error(message);
+          return;
+        }
+        const record = await response.json();
+        if (!record) {
+          console.warn(`Record with id ${id} not found`);
+          navigate("/");
+          return;
+        }
+        setForm({
+          name: record.name || "",
+          position: record.position || "",
+          level: record.level || "Intern"
+        });
+      } catch (error) {
+        console.error("Error fetching record:", error);
         navigate("/");
-        return;
       }
-      setForm(record);
     }
     fetchData();
-    return;
   }, [params.id, navigate]);
 
   function updateForm(value) {
@@ -46,9 +59,10 @@ export default function Record() {
     e.preventDefault();
     const person = { ...form };
     try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
       let response;
       if (isNew) {
-        response = await fetch(`${import.meta.env.VITE_API_URL}/record`, {
+        response = await fetch(`${baseUrl}/record`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -56,7 +70,7 @@ export default function Record() {
           body: JSON.stringify(person),
         });
       } else {
-        response = await fetch(`${import.meta.env.VITE_API_URL}/record/${params.id}`, {
+        response = await fetch(`${baseUrl}/record/${params.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -68,11 +82,11 @@ export default function Record() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } catch (error) {
-      console.error("A problem occurred with your fetch operation: ", error);
-    } finally {
       setForm({ name: "", position: "", level: "" });
       navigate("/");
+    } catch (error) {
+      console.error("A problem occurred with your fetch operation: ", error);
+      alert("Failed to save record. Please check your connection and try again.");
     }
   }
 

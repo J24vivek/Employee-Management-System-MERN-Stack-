@@ -4,7 +4,9 @@ import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  });
 
   const handleLogin = () => {
     setIsAuthenticated(true);

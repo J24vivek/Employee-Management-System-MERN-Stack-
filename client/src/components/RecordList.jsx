@@ -1,109 +1,144 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PropTypes from 'prop-types';
 
 
-const Record = (props) => (
-  <tr className="table-row">
-    <td className="table-cell table-cell-name">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <img 
-          src={`https://ui-avatars.com/api/?name=${props.record.name}&background=random&color=fff&rounded=true&size=32`} 
-          alt="Avatar"
-          style={{ width: '32px', height: '32px' }}
-        />
-        <span style={{ fontWeight: 600 }}>{props.record.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-      </div>
-    </td>
-    <td className="table-cell table-cell-position">{props.record.position.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</td>
-    <td className="table-cell table-cell-level">
-      <span className={`badge badge-${props.record.level.toLowerCase()}`}>
-        {props.record.level}
-      </span>
-    </td>
-    <td className="table-cell table-cell-actions">
-      <div className="action-buttons">
-        <Link className="btn-base btn-outline" style={{ height: '2rem', padding: '0 0.75rem', color: "#0ea5e9", borderColor: "#bae6fd" }} to={`/profile/${props.record._id}`}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Profile
-        </Link>
-        <Link className="btn-base btn-outline" style={{ height: '2rem', padding: '0 0.75rem' }} to={`/edit/${props.record._id}`}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-          Edit
-        </Link>
-        <button
-          className="btn-base btn-outline"
-          style={{ height: '2rem', padding: '0 0.75rem', color: "#dc2626", borderColor: "#fecaca" }}
-          type="button"
-          onClick={() => {
-            props.deleteRecord(props.record._id);
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-          Delete
-        </button>
-      </div>
-    </td>
-  </tr>
-);
 
-Record.propTypes = {
-  record: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    position: PropTypes.string.isRequired,
-    level: PropTypes.string.isRequired,
-  }).isRequired,
+const capitalize = (str) => {
+  if (typeof str !== 'string' || !str) return "";
+  return str.split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+const RecordComponent = ({ record, deleteRecord }) => {
+  if (!record) return null;
+
+  const name = capitalize(record.name || "Unknown");
+  const position = capitalize(record.position || "No Position");
+  const level = record.level || "Intern";
+  const id = record._id;
+
+  return (
+    <tr className="table-row">
+      <td className="table-cell table-cell-name">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <img 
+            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&rounded=true&size=32`} 
+            alt="Avatar"
+            style={{ width: '32px', height: '32px' }}
+          />
+          <span style={{ fontWeight: 600 }}>{name}</span>
+        </div>
+      </td>
+      <td className="table-cell table-cell-position">{position}</td>
+      <td className="table-cell table-cell-level">
+        <span className={`badge badge-${level.toLowerCase()}`}>
+          {level}
+        </span>
+      </td>
+      <td className="table-cell table-cell-actions">
+        <div className="action-buttons">
+          <Link className="btn-base btn-outline" style={{ height: '2rem', padding: '0 0.75rem', color: "#0ea5e9", borderColor: "#bae6fd" }} to={`/profile/${id}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profile
+          </Link>
+          <Link className="btn-base btn-outline" style={{ height: '2rem', padding: '0 0.75rem' }} to={`/edit/${id}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            Edit
+          </Link>
+          <button
+            className="btn-base btn-outline"
+            style={{ height: '2rem', padding: '0 0.75rem', color: "#dc2626", borderColor: "#fecaca" }}
+            type="button"
+            onClick={() => deleteRecord(id)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+RecordComponent.propTypes = {
+  record: PropTypes.object.isRequired,
   deleteRecord: PropTypes.func.isRequired,
 };
+
+const Record = React.memo(RecordComponent);
+
+Record.displayName = 'Record';
 
 export default function RecordList() {
   const [records, setRecords] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
+    let isMounted = true;
     async function getRecords() {
+      setIsLoading(true);
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL}/record/`;
-        console.log("Fetching from:", apiUrl);
-        const response = await fetch(apiUrl);
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+        const response = await fetch(`${baseUrl}/record/`);
         if (!response.ok) {
-          const message = `An error occurred: ${response.statusText}`;
-          console.error(message);
-          return;
+          throw new Error(`Failed to fetch records: ${response.status} ${response.statusText}`);
         }
-        const records = await response.json();
-        console.log("Records fetched successfully:", records);
-        setRecords(records);
-      } catch (error) {
-        console.error("Error fetching records:", error);
+        const data = await response.json();
+        if (isMounted) {
+          setRecords(Array.isArray(data) ? data : []);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error fetching records:", err);
+          setError(err.message);
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     }
     getRecords();
-  }, [location]); // Refetch when location changes (navigation)
+    return () => { isMounted = false; };
+  }, [location]);
 
-  async function deleteRecord(id) {
-    await fetch(`${import.meta.env.VITE_API_URL}/record/${id}`, {
-      method: "DELETE",
-    });
-    const newRecords = records.filter((el) => el._id !== id);
-    setRecords(newRecords);
-  }
+  const deleteRecord = useCallback(async (id) => {
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5050';
+      const response = await fetch(`${baseUrl}/record/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete record");
+      setRecords((prevRecords) => prevRecords.filter((el) => el._id !== id));
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      alert("Failed to delete record. Please try again.");
+    }
+  }, []);
 
-  const filteredRecords = records.filter((record) =>
-    record.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    record.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    record.level.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRecords = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return records;
+    
+    return records.filter((record) =>
+      (record.name || "").toLowerCase().includes(query) ||
+      (record.position || "").toLowerCase().includes(query) ||
+      (record.level || "").toLowerCase().includes(query)
+    );
+  }, [records, searchQuery]);
 
   function recordList() {
-    return filteredRecords.map((record) => {
+    return filteredRecords.map((record, index) => {
       return (
         <Record
           record={record}
-          deleteRecord={() => deleteRecord(record._id)}
-          key={record._id}
+          deleteRecord={deleteRecord}
+          key={record._id || `record-${index}`}
         />
       );
     });
@@ -132,7 +167,18 @@ export default function RecordList() {
       </div>
 
       <div className="table-container">
-        {filteredRecords.length > 0 ? (
+        {isLoading ? (
+          <div className="empty-state">
+            <div className="loader"></div>
+            <p className="empty-state-text">Loading employee records...</p>
+          </div>
+        ) : error ? (
+          <div className="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p className="empty-state-text" style={{ color: '#dc2626' }}>{error}</p>
+            <button onClick={() => window.location.reload()} className="btn-base btn-outline">Retry</button>
+          </div>
+        ) : filteredRecords.length > 0 ? (
           <table className="table">
             <thead>
               <tr>

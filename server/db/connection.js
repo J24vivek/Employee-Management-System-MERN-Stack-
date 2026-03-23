@@ -38,7 +38,6 @@ async function connectToDatabase() {
       // 🔄 AUTO RECOVERY SETTINGS
       retryWrites: true,
       retryReads: true,
-      bufferMaxEntries: 0, 
 
       // 📦 COMPRESSION - REDUCES BANDWIDTH
       compressors: ['zlib'],
