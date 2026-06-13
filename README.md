@@ -17,7 +17,8 @@ The application allows users to manage employee records efficiently with feature
 ![Login Page](outputSS/EMS-01.png)
 ![Dashboard](outputSS/EMS-02.png)
 ![Employee List](outputSS/EMS-03.png)
-![Add Employee](outputSS/EMS-04.png)
+<img width="803" height="601" alt="bc" src="https://github.com/user-attachments/assets/d3a7f941-8bca-4fd8-b1d7-c54998af8599" />
+<img width="1073" height="510" alt="as" src="https://github.com/user-attachments/assets/05cab0dd-6908-44b6-9954-e394b3c00a70" />
 ![Edit Employee](outputSS/EMS-05.png)
 
 ---
